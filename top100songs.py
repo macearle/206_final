@@ -10,7 +10,7 @@ import sqlite3
 import json
 import os
  
- 
+#grabs song title, artist name, year released for every song in top 100 songs of all time 
 def get_links():
    url = 'https://top40weekly.com/top-100-songs-of-all-time/'
    request = requests.get(url)
@@ -19,7 +19,7 @@ def get_links():
    artist_scrape = soup.find_all('div', class_ = 'x-text artist-name')
    year_scrape = soup.find_all('div', class_ = 'x-text song-rel')
    songs = []
-   #artists = []
+
    for index in range(len(song_scrape)):
        a = (song_scrape[index])
        b = (artist_scrape[index])
@@ -33,25 +33,7 @@ def get_links():
        songs.append(tup)
    return songs
 
-# Creating database
-def createDatabase(db_name):
-   path = os.path.dirname(os.path.abspath(__file__))
-   conn = sqlite3.connect(path+'/'+db_name)
-   cur = conn.cursor()
-   return cur, conn
-
-#create table for artist and artistid
-def create_artist_table(artistnames):
-   cur, conn = createDatabase('artists.db')
-   cur.execute("CREATE TABLE IF NOT EXISTS artists (artistid INTEGER PRIMARY KEY, artistname STRING)")
-
-   for i in range(len(artistnames)):
-      print(i)
-      print(artistnames[i])
-      cur.execute("INSERT OR IGNORE INTO artists (artistid, artistname) VALUES (?,?)",(i, artistnames[i]))
-      conn.commit()
-
-# gets a list of artists only once 
+# gets a list of all the artists of the songs only once 
 def get_artistnames(data):
    artist_lst = []
    for result in data:
@@ -61,11 +43,47 @@ def get_artistnames(data):
          artist_lst.append(result[1])
    return artist_lst
 
+# Creating database
+def createDatabase(db_name):
+   path = os.path.dirname(os.path.abspath(__file__))
+   conn = sqlite3.connect(path+'/'+db_name)
+   cur = conn.cursor()
+   return cur, conn
+
+#create table for artist and artistid
+def create_artist_table(artistnames):
+   cur, conn = createDatabase('Top100Songs.db')
+   cur.execute("CREATE TABLE IF NOT EXISTS artists (artistid INTEGER PRIMARY KEY, artistname STRING)")
+
+   for i in range(len(artistnames)):
+      #print(i)
+      #print(artistnames[i])
+      cur.execute("INSERT OR IGNORE INTO artists (artistid, artistname) VALUES (?,?)",(i, artistnames[i]))
+      conn.commit()
+
+
+# create table for song title, year, joining by artistid 
+def create_songdata_table(songinfo):
+    cur, conn = createDatabase('Top100Songs.db')
+    cur.execute('CREATE TABLE IF NOT EXISTS songdata(rank INTEGER PRIMARY KEY, songtitle STRING, year INTEGER, artistid INTEGER)')
+    rank = 100
+    for songs in songinfo:
+        song = songs[0]
+        year = songs[2]
+        artistname = songs[1]
+        cur.execute("SELECT artistid FROM artists WHERE artistname = ?", (artistname,))
+        id = int(cur.fetchone()[0])
+        cur.execute('INSERT OR IGNORE INTO songdata(rank, songtitle, year, artistid) VALUES (?,?,?,?)', (rank, song, year, id))
+        rank -= 1
+    conn.commit()
+
+
 
 def main():
    songinfo = get_links() 
    artistnames = get_artistnames(songinfo)
    create_artist_table(artistnames)
+   create_songdata_table(songinfo)
 
 
 main()
