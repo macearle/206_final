@@ -55,21 +55,6 @@ def make_request(song_lst):
                     genre = item['primaryGenreName']
                     genres.append((song,genre))
     return genres
-                    
-        #print(result)
-    #     # and info['artistName'] == artist 
-    #     result = json.loads(r.text)
-    #     for info in result['results']:
-    #         if (song in info['trackName']):
-    #             if song in songs:
-    #                 continue
-    #             else:
-    #                 print(info)
-    #                 count += 1
-    #                 print(count)
-    #                 songs.append(song)
-
-    # return genres
 
 
 def create_grene_table(genres):
