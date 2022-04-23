@@ -64,28 +64,12 @@ def create_artist_table(artistnames):
       conn.commit()
 
 
-# create table for song title, year, joining by artistid 
-def create_songdata_table(songinfo): #from makerequesr
-    cur, conn = createDatabase('Top100Songs.db')
-    cur.execute('CREATE TABLE IF NOT EXISTS songdata(rank INTEGER PRIMARY KEY, songtitle STRING, year INTEGER, artistid INTEGER)')
-    rank = 100
-    for songs in songinfo:
-        song = songs[0]
-        year = songs[2]
-        artistname = songs[1]
-        cur.execute("SELECT artistid FROM artists WHERE artistname = ?", (artistname,))
-        id = int(cur.fetchone()[0])
-        cur.execute('INSERT OR IGNORE INTO songdata(rank, songtitle, year, artistid) VALUES (?,?,?,?)', (rank, song, year, id))
-        rank -= 1
-    conn.commit()
+
+# def main():
+#    songinfo = get_links() 
+#    artistnames = get_artistnames(songinfo)
+#    create_artist_table(artistnames)
+#    create_songdata_table(songinfo)
 
 
-
-def main():
-   songinfo = get_links() 
-   artistnames = get_artistnames(songinfo)
-   create_artist_table(artistnames)
-   create_songdata_table(songinfo)
-
-
-main()
+# main()
