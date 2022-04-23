@@ -9,7 +9,8 @@ import unittest
 import sqlite3
 import json
 import os
- 
+
+
 #grabs song title, artist name, year released for every song in top 100 songs of all time 
 def get_links():
    url = 'https://top40weekly.com/top-100-songs-of-all-time/'
@@ -64,7 +65,7 @@ def create_artist_table(artistnames):
 
 
 # create table for song title, year, joining by artistid 
-def create_songdata_table(songinfo):
+def create_songdata_table(songinfo): #from makerequesr
     cur, conn = createDatabase('Top100Songs.db')
     cur.execute('CREATE TABLE IF NOT EXISTS songdata(rank INTEGER PRIMARY KEY, songtitle STRING, year INTEGER, artistid INTEGER)')
     rank = 100
