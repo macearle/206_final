@@ -32,6 +32,7 @@ def get_links():
        tup = (song,artist,year[-4:])
        songs.append(tup)
    return songs
+print(len(get_links()))
 
 # gets a list of all the artists of the songs only once 
 def get_artistnames(data):

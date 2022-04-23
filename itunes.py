@@ -12,46 +12,89 @@ import numpy as np
 from sqlalchemy import values
 from top100songs import get_links
 from top100songs import createDatabase
+import re
 
 
 def make_request(song_lst): 
     matches = []
     songs = []
     genres = []
+    count = 0
+    reg_exp_feat = r"(^.*) Feat.*"
+    reg_exp_parenth = r"(^.*) \(.*"
     for item in song_lst:
-        song = item[0]
-        artist = item[1]
-        year = item[2]
-        r = requests.get("https://itunes.apple.com/search", params = {'term': song,
-                                            'media': 'music'})
+        #reg ex song
+        full_song = item[0]
+        if full_song[0] == '(':
+            starts_with_p = r"\(.*\) (.*)"
+            song = re.findall(starts_with_p,full_song)[0]
+        elif ')' == full_song[-1]:
+            song = re.findall(reg_exp_parenth,full_song)[0]
+        else:
+            song = full_song
+        #reg ex artist
+        full_artist = item[1]
+        if "Feat" in full_artist:
+            artist = re.findall(reg_exp_feat,full_artist)[0]
+        else:
+            artist = full_artist
         
+        year = item[2]
+        #print(song,artist,year)
+        #print(count)
+        r = requests.get("https://itunes.apple.com/search", params = {'term': song,'media': 'music'})
         result = json.loads(r.text)
-        for info in result['results']:
-            if info['artistName'] == artist and info['trackName'] == song and info['kind'] == 'song':
+        for item in result['results']:
+            if item['artistName'] in artist:
                 if song in songs:
                     continue
                 else:
                     songs.append(song)
-                    #print(info)
-                    genre = info['primaryGenreName']
-                    if genre not in genres:
-                        genres.append(genre)
-                    else:
-                        continue
+                    #print(item)
+                    count += 1
+                    genre = item['primaryGenreName']
+                    genres.append((song,genre))
     return genres
+                    
+        #print(result)
+    #     # and info['artistName'] == artist 
+    #     result = json.loads(r.text)
+    #     for info in result['results']:
+    #         if (song in info['trackName']):
+    #             if song in songs:
+    #                 continue
+    #             else:
+    #                 print(info)
+    #                 count += 1
+    #                 print(count)
+    #                 songs.append(song)
+
+    # return genres
 
 
 def create_grene_table(genres):
    cur, conn = createDatabase('Top100Songs.db')
    cur.execute("CREATE TABLE IF NOT EXISTS genres (genreid INTEGER PRIMARY KEY, genre STRING)")
 
-   for i in range(len(genres)):
+   only_genre = []
+   for genre in genres:
+       if genre not in only_genre:
+           only_genre.append(genre[1])
+       else:
+            continue
+    
+   for i in range(len(only_genre)):
       #print(i)
       #print(artistnames[i])
-      cur.execute("INSERT OR IGNORE INTO genres (genreid, genre) VALUES (?,?)",(i, genres[i]))
+      cur.execute("INSERT OR IGNORE INTO genres (genreid, genre) VALUES (?,?)",(i, only_genre[i]))
       conn.commit()
 
 
 song_lst = get_links()
-genres = make_request(song_lst)
-create_grene_table(genres)
+print(make_request(song_lst))
+print(len(make_request(song_lst)))
+
+
+#create_grene_table(genres)
+
+#info['artistName'] == artist and 
