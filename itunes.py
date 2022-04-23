@@ -11,6 +11,7 @@ import sqlite3
 import numpy as np
 from sqlalchemy import values
 from top100songs import get_links
+from top100songs import createDatabase
 
 
 def make_request(song_lst): 
@@ -33,9 +34,24 @@ def make_request(song_lst):
                     songs.append(song)
                     #print(info)
                     genre = info['primaryGenreName']
-                    genres.append((song, genre))
-    return
+                    if genre not in genres:
+                        genres.append(genre)
+                    else:
+                        continue
+    return genres
+
+
+def create_grene_table(genres):
+   cur, conn = createDatabase('Top100Songs.db')
+   cur.execute("CREATE TABLE IF NOT EXISTS genres (genreid INTEGER PRIMARY KEY, genre STRING)")
+
+   for i in range(len(genres)):
+      #print(i)
+      #print(artistnames[i])
+      cur.execute("INSERT OR IGNORE INTO genres (genreid, genre) VALUES (?,?)",(i, genres[i]))
+      conn.commit()
 
 
 song_lst = get_links()
-print(make_request(song_lst))
+genres = make_request(song_lst)
+create_grene_table(genres)
