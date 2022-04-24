@@ -55,7 +55,7 @@ def make_request(song_lst):
 
 def create_grene_table(genres):
    cur, conn = createDatabase('Top100Songs.db')
-   cur.execute("CREATE TABLE IF NOT EXISTS genres (genreid INTEGER PRIMARY KEY, genre STRING)")
+   cur.execute("CREATE TABLE IF NOT EXISTS genres (id INTEGER PRIMARY KEY, genre STRING)")
    big_genre_lst = []
    for item in genres:
        big_genre_lst.append(item[1])
@@ -67,7 +67,7 @@ def create_grene_table(genres):
             only_genre.append(genre)
 
    for i in range(len(only_genre)):
-      cur.execute("INSERT OR IGNORE INTO genres (genreid, genre) VALUES (?,?)",(i, only_genre[i]))
+      cur.execute("INSERT OR IGNORE INTO genres (id, genre) VALUES (?,?)",(i, only_genre[i]))
       conn.commit()
 
 def all_data(songinfo, genres):
@@ -90,7 +90,7 @@ def create_songdata_table(alldata):
     for songs in alldata:
         song = songs[0]
         genre_ = songs[1]
-        cur.execute("SELECT genreid FROM genres WHERE genre = ?", (genre_,))
+        cur.execute("SELECT id FROM genres WHERE genre = ?", (genre_,))
         gid = int(cur.fetchone()[0])
         artistname = songs[2]
         cur.execute("SELECT artistid FROM artists WHERE artistname = ?", (artistname,))
@@ -101,6 +101,58 @@ def create_songdata_table(alldata):
     conn.commit()
  
 
+#select frequencies of genres 
+def most_pop_genre(): 
+    cur,conn = createDatabase('Top100Songs.db')
+    cur.execute("""
+    SELECT COUNT(*), genre
+    FROM songdata
+    JOIN genres
+    ON genres.id = songdata.genreid
+    GROUP BY genres.genre
+    """)
+    data = cur.fetchall()
+    return data
+
+# Create a bar plot vizualization using matplotlib with the data returned from most_pop_movie
+def viz_one(genredata):
+    count = []
+    genre = []
+    for item in genredata:
+        count.append(item[0])
+        genre.append(item[1])
+    plt.bar(genre, count, color = 'blue')
+    plt.xlabel("Genre")
+    plt.ylabel("Quantity")
+    plt.title("Number of Top 100 Songs in Each Genre")
+    plt.show()
+
+
+
+#--------------------------------------------------------------
+def most_pop_year(): 
+    cur,conn = createDatabase('Top100Songs.db')
+    cur.execute("""
+    SELECT COUNT(*), year
+    FROM songdata
+    GROUP BY songdata.year
+    """)
+    data = cur.fetchall()
+    return data
+
+# Create a bar plot vizualization using matplotlib with the data returned from most_pop_movie
+def viz_two(yeardata):
+    count = []
+    year = []
+    for item in yeardata:
+        count.append(item[0])
+        year.append(item[1])
+    plt.plot(year,count)
+    plt.title('by year')
+    plt.xlabel('Year')
+    plt.ylabel('Number of Songs')
+    plt.show()
+
 
 song_lst = get_links()
 genres = make_request(song_lst)
@@ -108,4 +160,10 @@ create_grene_table(genres)
 data = all_data(song_lst, genres)
 create_songdata_table(data)
 
+yeardata = most_pop_year()
+viz_two(yeardata)
+
+#--------uncomment below for plot-----------------
+#genredata = most_pop_genre()
+#viz_one(genredata)
 

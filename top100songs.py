@@ -63,7 +63,9 @@ def create_artist_table(artistnames):
       cur.execute("INSERT OR IGNORE INTO artists (artistid, artistname) VALUES (?,?)",(i, artistnames[i]))
       conn.commit()
 
-
+data = get_links()
+artistnames = get_artistnames(data)
+create_artist_table(artistnames)
 
 # def main():
 #    songinfo = get_links() 
