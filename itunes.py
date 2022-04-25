@@ -204,16 +204,29 @@ def make_third_plot(numsongs):
     plt.title("Frequency of artists with 1, 2, or 3+ songs in the top 100")
     plt.show()
 
+def fav_songs():
+    our_data = ["Uptown Funk!", "Shape of you", "I gotta feeling", "Hey Jude", "Uptown Funk!", 'Hey Jude', "Hey Jude", "Shape of you", "Shape of you", "Low", "Low", "I gotta feeling", "I gotta feeling", "Royals", "Royals", "Royals", "Royals", "Shape of you", "I gotta feeling", "I gotta feeling", "Low", "Low", "Uptown Funk!", "The Twist", "Shape of you"]
+    responsedic = {}
+    for response in our_data:
+        if response in responsedic:
+            responsedic[response] += 1
+        else:
+            responsedic[response] = 1
+    #print(responsedic)
+    label = list(responsedic.keys())
+    counts = list(responsedic.values())
+    plt.pie(counts, labels = label)
+    plt.axis('equal')
+    plt.title('25 Responses for Favorite Song out of top 100 songs of all time')
+    plt.show()
 
 
-
-
-song_lst = get_links()
-print(song_lst)
-genres = make_request(song_lst)
-create_grene_table(genres)
-data = all_data(song_lst, genres)
-create_songdata_table(data)
+# song_lst = get_links()
+# print(song_lst)
+# genres = make_request(song_lst)
+# create_grene_table(genres)
+# data = all_data(song_lst, genres)
+# create_songdata_table(data)
 
 
 #--------uncomment below for plot-----------------
@@ -225,4 +238,6 @@ create_songdata_table(data)
 
 # yeardata = most_pop_year()
 # viz_two(yeardata)
+
+#fav_songs()
 
