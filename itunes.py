@@ -10,7 +10,7 @@ from itertools import count
 import matplotlib.pyplot as plt
 import sqlite3
 import numpy as np
-from sqlalchemy import values
+# from sqlalchemy import values
 from top100songs import get_links
 from top100songs import createDatabase
 import re
@@ -21,24 +21,26 @@ def make_request(song_lst):
     songs = []
     genres = []
     count = 0
-    reg_exp_feat = r"(^.*) Feat.*"
-    reg_exp_parenth = r"(^.*) \(.*"
+    # reg_exp_feat = r"(^.*) Feat.*"
+    # reg_exp_parenth = r"(^.*) \(.*"
+    # for item in song_lst:
+    #     full_song = item[0]
+    #     if full_song[0] == '(':
+    #         starts_with_p = r"\(.*\) (.*)"
+    #         song = re.findall(starts_with_p,full_song)[0]
+    #     elif ')' == full_song[-1]:
+    #         song = re.findall(reg_exp_parenth,full_song)[0]
+    #     else:
+    #         song = full_song
+    #     full_artist = item[1]
+    #     if "Feat" in full_artist:
+    #         artist = re.findall(reg_exp_feat,full_artist)[0]
+    #     else:
+    #         artist = full_artist
+    #     year = item[2]
     for item in song_lst:
-        full_song = item[0]
-        if full_song[0] == '(':
-            starts_with_p = r"\(.*\) (.*)"
-            song = re.findall(starts_with_p,full_song)[0]
-        elif ')' == full_song[-1]:
-            song = re.findall(reg_exp_parenth,full_song)[0]
-        else:
-            song = full_song
-        full_artist = item[1]
-        if "Feat" in full_artist:
-            artist = re.findall(reg_exp_feat,full_artist)[0]
-        else:
-            artist = full_artist
-        year = item[2]
-
+        song = item[0]
+        artist = item[1]
         r = requests.get("https://itunes.apple.com/search", params = {'term': song,'media': 'music'})
         result = json.loads(r.text)
         for item in result['results']:
@@ -87,13 +89,23 @@ def all_data(songinfo, genres):
 def create_songdata_table(alldata): 
     cur, conn = createDatabase('Top100Songs.db')
     cur.execute('CREATE TABLE IF NOT EXISTS songdata(rank INTEGER PRIMARY KEY, songtitle STRING, year INTEGER, artistid INTEGER, genreid INTEGER)')
+    # start = 0
+    # minid = cur.execute('SELECT MIN(rank) FROM songdata').fetchone()[0]
+    # if minid is not None and minid== 9:
+    #     print('All songs added')
+    # else:
+
+
+
+    # # end = 25
+    # [start:start+25]
     for songs in alldata:
         song = songs[0]
         genre_ = songs[1]
         cur.execute("SELECT id FROM genres WHERE genre = ?", (genre_,))
         gid = int(cur.fetchone()[0])
         artistname = songs[2]
-        cur.execute("SELECT artistid FROM artists WHERE artistname = ?", (artistname,))
+        cur.execute("SELECT aid FROM artists WHERE artistname = ?", (artistname,))
         id = int(cur.fetchone()[0])
         year = songs[3]
         rank = songs[4]
@@ -112,9 +124,11 @@ def most_pop_genre():
     GROUP BY genres.genre
     """)
     data = cur.fetchall()
+    print(data)
     return data
 
-# Create a bar plot vizualization using matplotlib with the data returned from most_pop_movie
+
+# Create a bar plot vizualization using matplotlib with the data returned from most_pop_genre
 def viz_one(genredata):
     count = []
     genre = []
@@ -128,7 +142,6 @@ def viz_one(genredata):
     plt.show()
 
 
-
 #--------------------------------------------------------------
 def most_pop_year(): 
     cur,conn = createDatabase('Top100Songs.db')
@@ -140,7 +153,7 @@ def most_pop_year():
     data = cur.fetchall()
     return data
 
-# Create a bar plot vizualization using matplotlib with the data returned from most_pop_movie
+# Create a bar plot vizualization using matplotlib with the data returned from most_pop_year
 def viz_two(yeardata):
     count = []
     year = []
@@ -148,22 +161,68 @@ def viz_two(yeardata):
         count.append(item[0])
         year.append(item[1])
     plt.plot(year,count)
-    plt.title('by year')
+    plt.title('Number of Songs in each Genre in the top 100 by year')
     plt.xlabel('Year')
     plt.ylabel('Number of Songs')
     plt.show()
 
+# --------------------------------------------------------------
+
+def songs_per_artist():
+    cur,conn = createDatabase('Top100Songs.db')
+    cur.execute("""
+    SELECT COUNT(*), artistname
+    FROM songdata
+    JOIN artists
+    ON artists.aid = songdata.artistid
+    GROUP BY artists.artistname
+    """)
+    numsongs = cur.fetchall()
+    return numsongs
+
+
+
+def make_third_plot(numsongs):
+    artist_1 = 0 
+    artist_2 = 0
+    artist_3 = 0 
+    for song in numsongs:
+        if song[0] == 1:
+            artist_1 += 1
+        elif song[0] == 2:
+            artist_2 += 1
+        else:
+            artist_3 += 1
+    # print(artist_1)
+    # print(artist_2)
+    # print(artist_3)
+    xlabs = ['1', '2', '3']
+    ylabs = [artist_1, artist_2, artist_3]
+    plt.bar(xlabs, ylabs, color = "pink")
+    plt.xlabel("Number of songs")
+    plt.ylabel("Number of artists")
+    plt.title("Frequency of artists with 1, 2, or 3+ songs in the top 100")
+    plt.show()
+
+
+
+
 
 song_lst = get_links()
+print(song_lst)
 genres = make_request(song_lst)
 create_grene_table(genres)
 data = all_data(song_lst, genres)
 create_songdata_table(data)
 
-yeardata = most_pop_year()
-viz_two(yeardata)
 
 #--------uncomment below for plot-----------------
-#genredata = most_pop_genre()
-#viz_one(genredata)
+# genredata = most_pop_genre()
+# viz_one(genredata)
+
+# numsongs = songs_per_artist()
+# make_third_plot(numsongs)
+
+# yeardata = most_pop_year()
+# viz_two(yeardata)
 
