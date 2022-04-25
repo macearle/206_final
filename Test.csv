@@ -1,14 +1,14 @@
 Genre,Number of songs in Genre
-2,Alternative
-4,Country
-2,Dance
-1,Disco
-1,Easy Listening
-7,Hip-Hop/Rap
-1,Neo-Soul
-41,Pop
-14,R&B/Soul
-19,Rock
+Alternative,2
+Country,4
+Dance,2
+Disco,1
+Easy Listening,1
+Hip-Hop/Rap,7
+Neo-Soul,1
+Pop,42
+R&B/Soul,14
+Rock,18
  
 Year,Number of songs released in that year
 1958,1

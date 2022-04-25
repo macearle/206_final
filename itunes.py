@@ -18,6 +18,13 @@ import re
 
 
 def make_request(song_lst): 
+    """
+    This function is where we get requests from the iTunes API. We used the 
+    term and media parameters to request information about each song in the 
+    top 100 songs of all time. We did this by using a list (the list of tuples
+    returned from get_links()) as an argument that is passed into this function. 
+    This function creates a list of tuples with the song title and genre for each song. 
+    """
     matches = []
     songs = []
     genres = []
@@ -59,23 +66,34 @@ def make_request(song_lst):
 
 
 def create_grene_table(genres):
-   cur, conn = createDatabase('Top100Songs.db')
-   cur.execute("CREATE TABLE IF NOT EXISTS genres (id INTEGER PRIMARY KEY, genre STRING)")
-   big_genre_lst = []
-   for item in genres:
+    """
+    This function creates a table in our Top100Songs.db titled genres, using the list of tuples 
+    that is returned from make_request, each new genre is appended to a list and then inserted into
+    the genre table, while also being assigned a genreid. This creates a genre table with each genre 
+    in there one with a unqiue id. 
+    """
+    cur, conn = createDatabase('Top100Songs.db')
+    cur.execute("CREATE TABLE IF NOT EXISTS genres (id INTEGER PRIMARY KEY, genre STRING)")
+    big_genre_lst = []
+    for item in genres:
        big_genre_lst.append(item[1])
-   only_genre = []
-   for genre in big_genre_lst:
+    only_genre = []
+    for genre in big_genre_lst:
        if genre in only_genre:
            continue
        else:
             only_genre.append(genre)
 
-   for i in range(len(only_genre)):
+    for i in range(len(only_genre)):
       cur.execute("INSERT OR IGNORE INTO genres (id, genre) VALUES (?,?)",(i, only_genre[i]))
       conn.commit()
 
 def all_data(songinfo, genres):
+    """
+    This function creates a list of tuples, one for each song that has all of the song's information,
+    creating the song's rank with a count and creating the tuple with the song title, artistname, year released
+    and rank. 
+    """
     data = []
     rank = 1
     for songs in genres:
@@ -90,6 +108,13 @@ def all_data(songinfo, genres):
     return data
 
 def create_songdata_table(alldata): 
+    """
+    This function creates the songdata table in our Top100Songs.db. It takes in what is returned 
+    from all_data, which is a list of tuples, one for each song containing all of its information:
+    song title, artistname, genre, year released, and rank. This function inserts 25 rows into the table 
+    each time it is run. The artists table and genres table are used to add the ids for each of those
+    columns as to avoid repeating strings.
+    """
     cur, conn = createDatabase('Top100Songs.db')
     cur.execute('CREATE TABLE IF NOT EXISTS songdata(rank INTEGER PRIMARY KEY, songtitle STRING, year INTEGER, artistid INTEGER, genreid INTEGER)')
     cur.execute('SELECT MAX(rank) FROM songdata')
@@ -123,8 +148,12 @@ def create_songdata_table(alldata):
                     cur.execute('INSERT OR IGNORE INTO songdata(rank, songtitle, year, artistid, genreid) VALUES (?,?,?,?,?)', (rank, song, year, id, gid))
         conn.commit()
 
-#select frequencies of genres 
+
 def most_pop_genre(): 
+    """
+    This function is our first calculation. It takes a count of each genre and calculates the 
+    number of songs that are in each genre from the top100 songs of all time. 
+    """
     cur,conn = createDatabase('Top100Songs.db')
     cur.execute("""
     SELECT COUNT(*), genre
@@ -138,14 +167,19 @@ def most_pop_genre():
     return data
 
 def write_csv(genre_data, year_data, artist_data, file_name):
+    """
+    This function creates and writes our csv file titeled Test.csv, that writes out all the information we found 
+    from our calculations as text. We created three different areas using two line breaks 
+    to organize the data we collected from the calculations made. 
+    """
     with open(file_name, 'w', newline="") as fileout:
         writer = csv.writer(fileout)
         header = ['Genre', 'Number of songs in Genre']
         writer.writerow(header)
         for item in genre_data:
             l = []
-            l.append(item[0])
             l.append(item[1])
+            l.append(item[0])
             writer.writerow(l)
         writer.writerow([' '])
         writer.writerow(["Year", "Number of songs released in that year"])
@@ -163,8 +197,11 @@ def write_csv(genre_data, year_data, artist_data, file_name):
             writer.writerow(l2)
 
 
-# Create a bar plot vizualization using matplotlib with the data returned from most_pop_genre
 def viz_one(genredata):
+    """
+    This is the first visualization. A bar graph is created, comparing the number of songs in each genre
+    with genre on the xaxis and number of songs on the yaxis.
+    """
     count = []
     genre = []
     for item in genredata:
@@ -179,6 +216,10 @@ def viz_one(genredata):
 
 #--------------------------------------------------------------
 def most_pop_year(): 
+    """
+    This function is our second calculation, which selects a count of how many songs that are
+    in the top100 songs of all time were released in each year. 
+    """
     cur,conn = createDatabase('Top100Songs.db')
     cur.execute("""
     SELECT COUNT(*), year
@@ -192,6 +233,10 @@ def most_pop_year():
 
 # Create a bar plot vizualization using matplotlib with the data returned from most_pop_year
 def viz_two(yeardata):
+    """
+    This is our second visualization, which creates a line plot displaying the relationship
+    between the number of songs released per year that are in the top100 songs of all time. 
+    """
     count = []
     year = []
     for item in yeardata:
@@ -206,6 +251,10 @@ def viz_two(yeardata):
 # --------------------------------------------------------------
 
 def songs_per_artist():
+    """
+    This function is our third calculation. We counted how many songs each artist has in
+    the top100 songs of all time.
+    """
     cur,conn = createDatabase('Top100Songs.db')
     cur.execute("""
     SELECT COUNT(*), artistname
@@ -220,6 +269,11 @@ def songs_per_artist():
 
 
 def viz_three(numsongs):
+    """
+    This is our third visualization. We used the calculation from songs_per_artist to create a 
+    pie chart displaying the amount of artists that had 1 song, versus 2 songs, versus 3+ songs 
+    in the top100 songs of all time. 
+    """
     artist_1 = 0 
     artist_2 = 0
     artist_3 = 0 
@@ -241,6 +295,12 @@ def viz_three(numsongs):
     plt.show()
 
 def viz_four():
+    """
+    This function is a fourth visualization. We surveyed 25 of our friends and 
+    family members and showed them the list of songs in the top100 songs of all 
+    time, and then created a list out of their responses. We then used this information
+    to create a pie chart out of the data.  
+    """
     our_data = ["Uptown Funk!", "Shape of you", "I gotta feeling", "Hey Jude", "Uptown Funk!", 'Hey Jude', "Hey Jude", "Shape of you", "Shape of you", "Low", "Low", "I gotta feeling", "I gotta feeling", "Royals", "Royals", "Royals", "Royals", "Shape of you", "I gotta feeling", "I gotta feeling", "Low", "Low", "Uptown Funk!", "The Twist", "Shape of you"]
     responsedic = {}
     for response in our_data:
@@ -258,6 +318,10 @@ def viz_four():
     plt.show()
 
 def main():
+    """
+    The main function is where all of our functions are run with the proper arguments
+    in order for the file to run the way we need it to. 
+    """
     song_lst = get_links()
     print(song_lst)
     genres = make_request(song_lst)

@@ -11,8 +11,13 @@ import json
 import os
 
 
-#grabs song title, artist name, year released for every song in top 100 songs of all time 
 def get_links():
+   """
+   This function uses the top 100 songs of all time website and 
+   pulls the song title, artist name, and year released for every 
+   song in the list of top 100 songs using BeautifulSoup. We created a list 
+   of tuples, one for each song with this information. 
+   """
    url = 'https://top40weekly.com/top-100-songs-of-all-time/'
    request = requests.get(url)
    soup = BeautifulSoup(request.content, "html.parser")
@@ -35,8 +40,12 @@ def get_links():
    return songs
 # print(len(get_links()))
 
-# gets a list of all the artists of the songs only once 
+
 def get_artistnames(data):
+   """
+   This function takes the list of tuples that is returned from get_links() 
+   as an argument, and creates a list of just the names of each artist one time. 
+   """
    artist_lst = []
    for result in data:
       if result[1] in artist_lst:
@@ -45,15 +54,24 @@ def get_artistnames(data):
          artist_lst.append(result[1])
    return artist_lst
 
-# Creating database
+
 def createDatabase(db_name):
+   """
+   This function is the set up to create our database, Top100Songs.db
+   """
    path = os.path.dirname(os.path.abspath(__file__))
    conn = sqlite3.connect(path+'/'+db_name)
    cur = conn.cursor()
    return cur, conn
 
-#create table for artist and artistid
+
 def create_artist_table(artistnames):
+   """
+   This function takes in the list of all artistnames that is returned from 
+   the get_artistnames function, and uses createDatabase to create a table in 
+   the Top100Songs.db called artists, that assigns each artist name with an 
+   artistid, in order to avoid repeating strings in our larger table.
+   """
    cur, conn = createDatabase('Top100Songs.db')
    cur.execute("CREATE TABLE IF NOT EXISTS artists (aid INTEGER PRIMARY KEY, artistname STRING)")
 
