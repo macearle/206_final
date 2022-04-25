@@ -1,4 +1,5 @@
 from aem import con
+from matplotlib import colors
 import requests, json
 from xml.sax import parseString
 from bs4 import BeautifulSoup
@@ -91,14 +92,10 @@ def all_data(songinfo, genres):
 def create_songdata_table(alldata): 
     cur, conn = createDatabase('Top100Songs.db')
     cur.execute('CREATE TABLE IF NOT EXISTS songdata(rank INTEGER PRIMARY KEY, songtitle STRING, year INTEGER, artistid INTEGER, genreid INTEGER)')
-    # start = 0
     cur.execute('SELECT MAX(rank) FROM songdata')
     maxid = cur.fetchone()[0]
     if maxid == None:
         maxid = 1
-        print(maxid)
-        print(type(maxid))
-        print('--------------')
     try:
         for songs in alldata[maxid: maxid+25]:
                     song = songs[0]
@@ -125,38 +122,6 @@ def create_songdata_table(alldata):
                     rank = songs[4]
                     cur.execute('INSERT OR IGNORE INTO songdata(rank, songtitle, year, artistid, genreid) VALUES (?,?,?,?,?)', (rank, song, year, id, gid))
         conn.commit()
-
-    # else:
-    # if maxid == 100:
-    #     print('All songs added')
-    
-    # else:
-    #     if maxid+25 >= 100:
-    #         for songs in alldata[maxid:]:
-    #             song = songs[0]
-    #             genre_ = songs[1]
-    #             cur.execute("SELECT id FROM genres WHERE genre = ?", (genre_,))
-    #             gid = int(cur.fetchone()[0])
-    #             artistname = songs[2]
-    #             cur.execute("SELECT aid FROM artists WHERE artistname = ?", (artistname,))
-    #             id = int(cur.fetchone()[0])
-    #             year = songs[3]
-    #             rank = songs[4]
-    #             cur.execute('INSERT OR IGNORE INTO songdata(rank, songtitle, year, artistid, genreid) VALUES (?,?,?,?,?)', (rank, song, year, id, gid))
-        # else:
-        #     for songs in alldata[maxid: maxid+25]:
-        #         song = songs[0]
-        #         genre_ = songs[1]
-        #         cur.execute("SELECT id FROM genres WHERE genre = ?", (genre_,))
-        #         gid = int(cur.fetchone()[0])
-        #         artistname = songs[2]
-        #         cur.execute("SELECT aid FROM artists WHERE artistname = ?", (artistname,))
-        #         id = int(cur.fetchone()[0])
-        #         year = songs[3]
-        #         rank = songs[4]
-        #         cur.execute('INSERT OR IGNORE INTO songdata(rank, songtitle, year, artistid, genreid) VALUES (?,?,?,?,?)', (rank, song, year, id, gid))
-    # conn.commit()
- 
 
 #select frequencies of genres 
 def most_pop_genre(): 
@@ -205,10 +170,10 @@ def viz_one(genredata):
     for item in genredata:
         count.append(item[0])
         genre.append(item[1])
-    plt.bar(genre, count, color = 'blue')
+    plt.bar(genre, count, color = 'purple')
     plt.xlabel("Genre")
     plt.ylabel("Quantity")
-    plt.title("Number of Top 100 Songs in Each Genre")
+    plt.title("Number of songs Top 100 Songs per Genre")
     plt.show()
 
 
@@ -233,7 +198,7 @@ def viz_two(yeardata):
         count.append(item[0])
         year.append(item[1])
     plt.plot(year,count)
-    plt.title('Number of Songs in each Genre in the top 100 by year')
+    plt.title('Songs that made the Top 100 List by Release Year')
     plt.xlabel('Year')
     plt.ylabel('Number of Songs')
     plt.show()
@@ -254,7 +219,7 @@ def songs_per_artist():
 
 
 
-def make_third_plot(numsongs):
+def viz_three(numsongs):
     artist_1 = 0 
     artist_2 = 0
     artist_3 = 0 
@@ -268,15 +233,14 @@ def make_third_plot(numsongs):
     # print(artist_1)
     # print(artist_2)
     # print(artist_3)
-    xlabs = ['1', '2', '3']
-    ylabs = [artist_1, artist_2, artist_3]
-    plt.bar(xlabs, ylabs, color = "pink")
-    plt.xlabel("Number of songs")
-    plt.ylabel("Number of artists")
-    plt.title("Frequency of artists with 1, 2, or 3+ songs in the top 100")
+    xlabs = ['1 song', '2 songs', '3 songs']
+    counts = [artist_1, artist_2, artist_3]
+    plt.pie(counts, labels = xlabs, colors = ['green', 'aquamarine', 'blue'])
+    plt.axis('equal')
+    plt.title('Frequencies of Artists with one, two, or 3 songs in the top 100')
     plt.show()
 
-def fav_songs():
+def viz_four():
     our_data = ["Uptown Funk!", "Shape of you", "I gotta feeling", "Hey Jude", "Uptown Funk!", 'Hey Jude', "Hey Jude", "Shape of you", "Shape of you", "Low", "Low", "I gotta feeling", "I gotta feeling", "Royals", "Royals", "Royals", "Royals", "Shape of you", "I gotta feeling", "I gotta feeling", "Low", "Low", "Uptown Funk!", "The Twist", "Shape of you"]
     responsedic = {}
     for response in our_data:
@@ -287,7 +251,8 @@ def fav_songs():
     #print(responsedic)
     label = list(responsedic.keys())
     counts = list(responsedic.values())
-    plt.pie(counts, labels = label)
+    colors_ = ['red', 'orange', 'pink', 'aquamarine', 'blue', 'purple', 'violet']
+    plt.pie(counts, labels = label, colors = colors_)
     plt.axis('equal')
     plt.title('25 Responses for Favorite Song out of top 100 songs of all time')
     plt.show()
@@ -304,20 +269,22 @@ def main():
     year_data = most_pop_year()
     artist_data = songs_per_artist()
     write_csv(genre_data, year_data, artist_data, 'Test.csv')
+        #--------uncomment below for each plot-----------------
+    genredata = most_pop_genre()
+    viz_one(genredata)
+
+    yeardata = most_pop_year()
+    viz_two(yeardata)
+
+    songs = songs_per_artist()
+    viz_three(songs)
+
+    viz_four()
 
 if __name__ == '__main__':
     main()
 
 
-#--------uncomment below for each plot-----------------
-# genredata = most_pop_genre()
-# viz_one(genredata)
 
-# numsongs = songs_per_artist()
-# make_third_plot(numsongs)
 
-# yeardata = most_pop_year()
-# viz_two(yeardata)
-
-#fav_songs()
 
