@@ -21,6 +21,7 @@ def make_request(song_lst):
     songs = []
     genres = []
     count = 0
+    #-----------
     # reg_exp_feat = r"(^.*) Feat.*"
     # reg_exp_parenth = r"(^.*) \(.*"
     # for item in song_lst:
@@ -38,6 +39,7 @@ def make_request(song_lst):
     #     else:
     #         artist = full_artist
     #     year = item[2]
+    #______________
     for item in song_lst:
         song = item[0]
         artist = item[1]
@@ -74,7 +76,7 @@ def create_grene_table(genres):
 
 def all_data(songinfo, genres):
     data = []
-    rank = 100
+    rank = 1
     for songs in genres:
         song = songs[0]
         genre = songs[1]
@@ -83,32 +85,77 @@ def all_data(songinfo, genres):
                 artistname = item[1]
                 year = item[2]
         data.append((song, genre, artistname,year, rank))
-        rank -= 1
+        rank += 1
     return data
 
 def create_songdata_table(alldata): 
     cur, conn = createDatabase('Top100Songs.db')
     cur.execute('CREATE TABLE IF NOT EXISTS songdata(rank INTEGER PRIMARY KEY, songtitle STRING, year INTEGER, artistid INTEGER, genreid INTEGER)')
     # start = 0
-    # minid = cur.execute('SELECT MIN(rank) FROM songdata').fetchone()[0]
-    # if minid is not None and minid== 9:
-    #     print('All songs added')
-    # else:
+    cur.execute('SELECT MAX(rank) FROM songdata')
+    maxid = cur.fetchone()[0]
+    if maxid == None:
+        maxid = 1
+        print(maxid)
+        print(type(maxid))
+        print('--------------')
+    try:
+        for songs in alldata[maxid: maxid+25]:
+                    song = songs[0]
+                    genre_ = songs[1]
+                    cur.execute("SELECT id FROM genres WHERE genre = ?", (genre_,))
+                    gid = int(cur.fetchone()[0])
+                    artistname = songs[2]
+                    cur.execute("SELECT aid FROM artists WHERE artistname = ?", (artistname,))
+                    id = int(cur.fetchone()[0])
+                    year = songs[3]
+                    rank = songs[4]
+                    cur.execute('INSERT OR IGNORE INTO songdata(rank, songtitle, year, artistid, genreid) VALUES (?,?,?,?,?)', (rank, song, year, id, gid))
+        conn.commit()
+    except:
+        for songs in alldata[maxid:]:
+                    song = songs[0]
+                    genre_ = songs[1]
+                    cur.execute("SELECT id FROM genres WHERE genre = ?", (genre_,))
+                    gid = int(cur.fetchone()[0])
+                    artistname = songs[2]
+                    cur.execute("SELECT aid FROM artists WHERE artistname = ?", (artistname,))
+                    id = int(cur.fetchone()[0])
+                    year = songs[3]
+                    rank = songs[4]
+                    cur.execute('INSERT OR IGNORE INTO songdata(rank, songtitle, year, artistid, genreid) VALUES (?,?,?,?,?)', (rank, song, year, id, gid))
+        conn.commit()
 
-    # # end = 25
-    # [start:start+25]
-    for songs in alldata:
-        song = songs[0]
-        genre_ = songs[1]
-        cur.execute("SELECT id FROM genres WHERE genre = ?", (genre_,))
-        gid = int(cur.fetchone()[0])
-        artistname = songs[2]
-        cur.execute("SELECT aid FROM artists WHERE artistname = ?", (artistname,))
-        id = int(cur.fetchone()[0])
-        year = songs[3]
-        rank = songs[4]
-        cur.execute('INSERT OR IGNORE INTO songdata(rank, songtitle, year, artistid, genreid) VALUES (?,?,?,?,?)', (rank, song, year, id, gid))
-    conn.commit()
+    # else:
+    # if maxid == 100:
+    #     print('All songs added')
+    
+    # else:
+    #     if maxid+25 >= 100:
+    #         for songs in alldata[maxid:]:
+    #             song = songs[0]
+    #             genre_ = songs[1]
+    #             cur.execute("SELECT id FROM genres WHERE genre = ?", (genre_,))
+    #             gid = int(cur.fetchone()[0])
+    #             artistname = songs[2]
+    #             cur.execute("SELECT aid FROM artists WHERE artistname = ?", (artistname,))
+    #             id = int(cur.fetchone()[0])
+    #             year = songs[3]
+    #             rank = songs[4]
+    #             cur.execute('INSERT OR IGNORE INTO songdata(rank, songtitle, year, artistid, genreid) VALUES (?,?,?,?,?)', (rank, song, year, id, gid))
+        # else:
+        #     for songs in alldata[maxid: maxid+25]:
+        #         song = songs[0]
+        #         genre_ = songs[1]
+        #         cur.execute("SELECT id FROM genres WHERE genre = ?", (genre_,))
+        #         gid = int(cur.fetchone()[0])
+        #         artistname = songs[2]
+        #         cur.execute("SELECT aid FROM artists WHERE artistname = ?", (artistname,))
+        #         id = int(cur.fetchone()[0])
+        #         year = songs[3]
+        #         rank = songs[4]
+        #         cur.execute('INSERT OR IGNORE INTO songdata(rank, songtitle, year, artistid, genreid) VALUES (?,?,?,?,?)', (rank, song, year, id, gid))
+    # conn.commit()
  
 
 #select frequencies of genres 
@@ -245,18 +292,21 @@ def fav_songs():
     plt.title('25 Responses for Favorite Song out of top 100 songs of all time')
     plt.show()
 
+def main():
+    song_lst = get_links()
+    print(song_lst)
+    genres = make_request(song_lst)
+    create_grene_table(genres)
+    data = all_data(song_lst, genres)
+    create_songdata_table(data)
 
-song_lst = get_links()
-print(song_lst)
-genres = make_request(song_lst)
-create_grene_table(genres)
-data = all_data(song_lst, genres)
-create_songdata_table(data)
+    genre_data = most_pop_genre()
+    year_data = most_pop_year()
+    artist_data = songs_per_artist()
+    write_csv(genre_data, year_data, artist_data, 'Test.csv')
 
-genre_data = most_pop_genre()
-year_data = most_pop_year()
-artist_data = songs_per_artist()
-write_csv(genre_data, year_data, artist_data, 'Test.csv')
+if __name__ == '__main__':
+    main()
 
 
 #--------uncomment below for each plot-----------------
