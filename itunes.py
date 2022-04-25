@@ -95,8 +95,6 @@ def create_songdata_table(alldata):
     #     print('All songs added')
     # else:
 
-
-
     # # end = 25
     # [start:start+25]
     for songs in alldata:
@@ -127,6 +125,31 @@ def most_pop_genre():
     print(data)
     return data
 
+def write_csv(genre_data, year_data, artist_data, file_name):
+    with open(file_name, 'w', newline="") as fileout:
+        writer = csv.writer(fileout)
+        header = ['Genre', 'Number of songs in Genre']
+        writer.writerow(header)
+        for item in genre_data:
+            l = []
+            l.append(item[0])
+            l.append(item[1])
+            writer.writerow(l)
+        writer.writerow([' '])
+        writer.writerow(["Year", "Number of songs released in that year"])
+        for item in year_data:
+            l1 = []
+            l1.append(item[1])
+            l1.append(item[0])
+            writer.writerow(l1)
+        writer.writerow([' '])
+        writer.writerow(["Artist Name", "Number of songs they have in top 100 songs of all time"])
+        for item in artist_data:
+            l2 = []
+            l2.append(item[1])
+            l2.append(item[0])
+            writer.writerow(l2)
+
 
 # Create a bar plot vizualization using matplotlib with the data returned from most_pop_genre
 def viz_one(genredata):
@@ -152,6 +175,8 @@ def most_pop_year():
     """)
     data = cur.fetchall()
     return data
+
+
 
 # Create a bar plot vizualization using matplotlib with the data returned from most_pop_year
 def viz_two(yeardata):
@@ -221,15 +246,20 @@ def fav_songs():
     plt.show()
 
 
-# song_lst = get_links()
-# print(song_lst)
-# genres = make_request(song_lst)
-# create_grene_table(genres)
-# data = all_data(song_lst, genres)
-# create_songdata_table(data)
+song_lst = get_links()
+print(song_lst)
+genres = make_request(song_lst)
+create_grene_table(genres)
+data = all_data(song_lst, genres)
+create_songdata_table(data)
+
+genre_data = most_pop_genre()
+year_data = most_pop_year()
+artist_data = songs_per_artist()
+write_csv(genre_data, year_data, artist_data, 'Test.csv')
 
 
-#--------uncomment below for plot-----------------
+#--------uncomment below for each plot-----------------
 # genredata = most_pop_genre()
 # viz_one(genredata)
 
