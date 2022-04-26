@@ -15,7 +15,7 @@ import numpy as np
 from top100songs import get_links
 from top100songs import createDatabase
 import re
-
+from top100songs import get_artistnames, create_artist_table
 
 def make_request(song_lst): 
     """
@@ -323,7 +323,8 @@ def main():
     in order for the file to run the way we need it to. 
     """
     song_lst = get_links()
-    print(song_lst)
+    artistnames = get_artistnames(song_lst)
+    create_artist_table(artistnames)
     genres = make_request(song_lst)
     create_grene_table(genres)
     data = all_data(song_lst, genres)
@@ -334,16 +335,16 @@ def main():
     artist_data = songs_per_artist()
     write_csv(genre_data, year_data, artist_data, 'Test.csv')
         #--------uncomment below for each plot-----------------
-    genredata = most_pop_genre()
-    viz_one(genredata)
+    # genredata = most_pop_genre()
+    # viz_one(genredata)
 
-    yeardata = most_pop_year()
-    viz_two(yeardata)
+    # yeardata = most_pop_year()
+    # viz_two(yeardata)
 
-    songs = songs_per_artist()
-    viz_three(songs)
+    # songs = songs_per_artist()
+    # viz_three(songs)
 
-    viz_four()
+    # viz_four()
 
 if __name__ == '__main__':
     main()
